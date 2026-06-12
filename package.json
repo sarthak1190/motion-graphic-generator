@@ -1,0 +1,33 @@
+{
+  "name": "motion-infographic-generator",
+  "version": "1.0.0",
+  "description": "Reusable AI-assisted content-to-motion engine for premium developer infographic reels.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "render": "node src/index.js render",
+    "render:single": "node src/index.js render:single",
+    "render:all": "node src/index.js render:all",
+    "export:gifs": "node src/index.js export:gifs",
+    "export:mp4": "node src/index.js export:mp4",
+    "analyze": "node src/index.js analyze",
+    "preview": "node src/index.js preview",
+    "debug": "node src/index.js debug",
+    "debug:day11": "node src/index.js debug ./content/day-11.md",
+    "test": "node --test"
+  },
+  "keywords": [
+    "motion",
+    "infographic",
+    "puppeteer",
+    "ffmpeg",
+    "education",
+    "reels"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "puppeteer": "^24.10.1"
+  }
+}

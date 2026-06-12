@@ -1,0 +1,61 @@
+{
+  "brand": {
+    "handle": "@java_learning_hub_",
+    "challengeBadge": "Developer Learning Sprint",
+    "footerPrefix": "Follow for more",
+    "cta": [
+      "Save This Post",
+      "Follow For More",
+      "Share With A Friend"
+    ]
+  },
+  "canvas": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationSeconds": 3,
+    "format": "9:16"
+  },
+  "output": {
+    "dir": "output",
+    "minClips": 1,
+    "maxClips": 60,
+    "minTotalSeconds": 15,
+    "preferredMinTotalSeconds": 45,
+    "preferredMaxTotalSeconds": 75,
+    "maxTotalSeconds": 180,
+    "minSceneSeconds": 3,
+    "maxSceneSeconds": 8,
+    "finalHoldSeconds": 0.4,
+    "minFinalTextOpacity": 0.85,
+    "maxGifClips": 60,
+    "gifFps": 12,
+    "gifWidth": 720,
+    "maxVisibleBlocksPerScene": 5,
+    "showFooterChips": true,
+    "keepFrames": false,
+    "keepHtml": true
+  },
+  "theme": {
+    "background": "#FAFAFA",
+    "primary": "#F89820",
+    "secondary": "#5382A1",
+    "card": "#FFFFFF",
+    "cardStrong": "#EFF6FF",
+    "text": "#111827",
+    "ink": "#111827",
+    "muted": "#4B5563",
+    "success": "#16A34A",
+    "danger": "#DC2626"
+  },
+  "render": {
+    "concurrency": 1,
+    "captureStartSeconds": 0.25,
+    "mountDelayMs": 500,
+    "puppeteerLaunchArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--font-render-hinting=none"
+    ]
+  }
+}
