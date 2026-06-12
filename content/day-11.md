@@ -82,22 +82,11 @@ switch(variable) {
 
 ```java
 int day = 3;
-
 switch(day) {
-    case 1:
-        System.out.println("Monday");
-        break;
-
-    case 2:
-        System.out.println("Tuesday");
-        break;
-
-    case 3:
-        System.out.println("Wednesday");
-        break;
-
-    default:
-        System.out.println("Invalid Day");
+    case 1: System.out.println("Monday"); break;
+    case 2: System.out.println("Tuesday"); break;
+    case 3: System.out.println("Wednesday"); break;
+    default: System.out.println("Invalid Day");
 }
 ```
 
@@ -142,18 +131,10 @@ The default case runs when no case value matches.
 
 ```java
 int day = 10;
-
 switch(day) {
-    case 1:
-        System.out.println("Monday");
-        break;
-
-    case 2:
-        System.out.println("Tuesday");
-        break;
-
-    default:
-        System.out.println("Invalid Day");
+    case 1: System.out.println("Monday"); break;
+    case 2: System.out.println("Tuesday"); break;
+    default: System.out.println("Invalid Day");
 }
 ```
 
@@ -176,30 +157,18 @@ ATM menus are a common example of switch statements.
 4: Exit
 ```
 
+## ATM Switch Example
+
 If the user selects option 2, the switch statement directly runs the withdraw cash logic.
 
 ```java
 int option = 2;
-
 switch(option) {
-    case 1:
-        System.out.println("Check Balance");
-        break;
-
-    case 2:
-        System.out.println("Withdraw Cash");
-        break;
-
-    case 3:
-        System.out.println("Deposit Money");
-        break;
-
-    case 4:
-        System.out.println("Exit");
-        break;
-
-    default:
-        System.out.println("Invalid Option");
+    case 1: System.out.println("Check Balance"); break;
+    case 2: System.out.println("Withdraw Cash"); break;
+    case 3: System.out.println("Deposit Money"); break;
+    case 4: System.out.println("Exit"); break;
+    default: System.out.println("Invalid Option");
 }
 ```
 

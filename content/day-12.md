@@ -184,8 +184,7 @@ Runs while a condition remains true.
 ### Syntax
 
 ```java
-while(condition)
-{
+while(condition) {
    // code
 }
 ```
@@ -194,9 +193,7 @@ while(condition)
 
 ```java
 int i = 1;
-
-while(i <= 5)
-{
+while(i <= 5) {
    System.out.println(i);
    i++;
 }
@@ -223,24 +220,19 @@ Executes before checking the condition.
 ### Syntax
 
 ```java
-do
-{
+do {
    // code
-}
-while(condition);
+} while(condition);
 ```
 
 ### Example
 
 ```java
 int i = 1;
-
-do
-{
+do {
    System.out.println(i);
    i++;
-}
-while(i <= 5);
+} while(i <= 5);
 ```
 
 ### Key Point

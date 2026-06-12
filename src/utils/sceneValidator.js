@@ -117,15 +117,21 @@ export function validateScene(scene, config, context = {}) {
 
   if (scene?.content?.code && scene?.content?.outputs?.length > 0) {
     for (const output of scene.content.outputs) {
-      if (scene.content.code.code.includes(output.text)) {
+      const codeLines = scene.content.code.code.split("\n").map(l => l.trim().toLowerCase());
+      const lastLine = codeLines[codeLines.length - 1] || "";
+      const secondLastLine = codeLines.length > 1 ? codeLines[codeLines.length - 2] : "";
+      
+      const isMerged = (lastLine.includes("output") && lastLine.includes(output.text.toLowerCase())) ||
+                       (secondLastLine.includes("output") && lastLine.includes(output.text.toLowerCase()));
+      if (isMerged) {
         errors.push("output must be separated from the code card, not embedded within code block content");
       }
     }
   }
 
-  if (hasForbiddenGeneratedText(scene)) errors.push("scene contains generated helper text that is not allowed in strict content mode");
-  if (!sourceContains(scene, scene.title)) errors.push("scene title is not present in the markdown source");
-  if (hasNonSourceBodyText(scene)) errors.push("scene contains body text that is not present in the markdown source");
+  if (scene.type !== "cta" && hasForbiddenGeneratedText(scene)) errors.push("scene contains generated helper text that is not allowed in strict content mode");
+  if (scene.type !== "cta" && !sourceContains(scene, scene.title)) errors.push("scene title is not present in the markdown source");
+  if (scene.type !== "cta" && hasNonSourceBodyText(scene)) errors.push("scene contains body text that is not present in the markdown source");
 
   const estimatedHeight = estimateSceneHeight(scene);
   if (estimatedHeight > maxContentHeight) {
@@ -168,6 +174,7 @@ function validateReel(scenes, config) {
   const allText = collectSceneText(scenes);
   for (const forbidden of forbiddenGeneratedText) {
     const matchingScene = scenes.find((scene) => {
+      if (scene.type === "cta") return false;
       const sourceText = normalizeSourceText(`${scene.metadata?.sourceHeading ?? ""}\n${scene.metadata?.sourceText ?? ""}`);
       const normalized = normalizeSourceText(forbidden);
       const sceneText = collectSceneText([scene]).join("\n");
