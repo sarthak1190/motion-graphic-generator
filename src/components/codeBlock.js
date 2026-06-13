@@ -29,29 +29,54 @@ const languageTokens = {
 export function renderCodeBlock(snippet, outputs = []) {
   const lines = snippet.code.split("\n").filter(Boolean);
   const importantLine = findImportantLine(lines, outputs);
-  
-  // Dynamic typing duration between 0.3s and 1.0s depending on code length
-  const totalTypingDuration = 0.3 + Math.min(1.0, Math.max(0, lines.length - 1) / 9) * 0.7;
+
+  // Dynamic typing duration between 0.5s and 1.2s depending on code length
+  const totalTypingDuration = 0.5 + Math.min(1.0, Math.max(0, lines.length - 1) / 9) * 0.7;
   const lineBaseDelay = 0.45;
   const lineStepDelay = lines.length > 1 ? totalTypingDuration / (lines.length - 1) : 0;
   const highlightDelay = lineBaseDelay + totalTypingDuration + 0.2;
 
+  // Calculate dynamic font-size, line-height, and padding based on code line count
+  const { fontSize, lineHeight, padding } = getCodeStyle(lines.length);
+
   return `
-    <div class="code-shell glass-card animated visible-element" style="--delay: 0.45s; --line-count: ${lines.length}" data-visible="code" data-line-count="${lines.length}">
+    <div class="code-shell glass-card animated visible-element" style="--delay: 0.45s; --line-count: ${lines.length}; --code-font-size: ${fontSize}px; --code-line-height: ${lineHeight}; --code-padding: ${padding}" data-visible="code" data-line-count="${lines.length}">
       <div class="window-bar">
         <span></span><span></span><span></span>
         <strong>${escapeHtml(snippet.title || snippet.language)}</strong>
       </div>
       <pre class="code-pre">${lines
-        .map((line, index) => {
-          const highlighted = highlightLine(line, snippet.language);
-          const importantClass = index === importantLine ? " important-line" : "";
-          const lineDelay = lineBaseDelay + index * lineStepDelay;
-          return `<code class="code-line${importantClass}" style="--delay: ${lineDelay.toFixed(2)}s; --highlight-delay: ${highlightDelay.toFixed(2)}s">${highlighted}</code>`;
-        })
-        .join("")}<span class="code-cursor" style="--delay: ${(lineBaseDelay + totalTypingDuration).toFixed(2)}s"></span></pre>
+      .map((line, index) => {
+        const highlighted = highlightLine(line, snippet.language);
+        const importantClass = index === importantLine ? " important-line" : "";
+        const lineDelay = lineBaseDelay + index * lineStepDelay;
+        return `<code class="code-line${importantClass}" style="--delay: ${lineDelay.toFixed(2)}s; --highlight-delay: ${highlightDelay.toFixed(2)}s">${highlighted}</code>`;
+      })
+      .join("")}<span class="code-cursor" style="--delay: ${(lineBaseDelay + totalTypingDuration).toFixed(2)}s"></span></pre>
     </div>
   `;
+}
+
+function getCodeStyle(lineCount) {
+  let fontSize = 28;
+  let lineHeight = 1.15;
+  let padding = "10px 14px";
+
+  if (lineCount <= 4) {
+    fontSize = 32;
+  } else if (lineCount <= 7) {
+    fontSize = 28;
+  } else if (lineCount <= 11) {
+    fontSize = 24;
+  } else {
+    fontSize = 22;
+  }
+
+  return {
+    fontSize,
+    lineHeight,
+    padding
+  };
 }
 
 function findImportantLine(lines, outputs) {

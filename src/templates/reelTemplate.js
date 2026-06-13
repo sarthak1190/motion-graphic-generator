@@ -210,18 +210,18 @@ export function renderClipHtml(scene, config) {
       .output-card,
       .output-only-card {
         animation-name: fadeRise;
-        animation-duration: 0.46s;
+        animation-duration: 0.85s;
         animation-timing-function: var(--premium-ease);
       }
 
       .hero-title {
         animation-name: heroPop;
-        animation-duration: 0.55s;
+        animation-duration: 0.90s;
       }
 
       .timeline-card {
         animation-name: slideLeft;
-        animation-duration: 0.46s;
+        animation-duration: 0.85s;
       }
 
       .definition-card,
@@ -260,17 +260,21 @@ export function renderClipHtml(scene, config) {
       .flow-board,
       .comparison-table {
         animation-name: scaleIn;
-        animation-duration: 0.5s;
+        animation-duration: 0.90s;
       }
 
       .flow-board {
-        animation: scaleIn 0.5s var(--premium-ease) both, flowPulse 3.6s ease-in-out infinite;
+        animation: scaleIn 0.90s var(--premium-ease) both, flowPulse 3.6s ease-in-out infinite;
+        background-color: var(--card); /* Fallback */
+        border: 1px solid rgba(83, 130, 161, 0.18);
+        border-radius: 24px;
+        box-shadow: 0 18px 48px rgba(11, 31, 77, 0.12);
         animation-delay: calc(var(--delay, 0s) - var(--capture-time)), calc(1.5s - var(--capture-time));
       }
 
       .cta-hero-card {
         animation-name: ctaRise;
-        animation-duration: 0.55s;
+        animation-duration: 0.90s;
       }
 
       .glass-card {
@@ -872,8 +876,8 @@ export function renderClipHtml(scene, config) {
         border: 1px solid rgba(83,130,161,0.22);
         display: flex;
         flex-direction: column;
-        min-height: 500px;
-        max-height: 900px;
+        min-height: 360px;
+        max-height: 602px;
         height: auto;
       }
 
@@ -910,12 +914,12 @@ export function renderClipHtml(scene, config) {
 
       .code-pre {
         margin: 0;
-        padding: 18px 22px 22px;
+        padding: var(--code-padding, 16px 20px 20px);
         overflow: visible;
         background: #0B1F4D;
         color: #EAF3FF;
-        font-size: 42px;
-        line-height: 1.30;
+        font-size: var(--code-font-size, 38px);
+        line-height: var(--code-line-height, 1.25);
         flex: 1;
       }
 
@@ -924,7 +928,7 @@ export function renderClipHtml(scene, config) {
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         animation-name: lineReveal;
-        animation-duration: 0.32s;
+        animation-duration: 0.60s;
         animation-timing-function: var(--premium-ease);
         opacity: 1;
       }
@@ -937,7 +941,7 @@ export function renderClipHtml(scene, config) {
         background: rgba(248,152,32,0.24);
         box-shadow: inset 4px 0 0 var(--primary), 0 0 24px rgba(248,152,32,0.18);
         animation-name: lineReveal, importantLineGlow;
-        animation-duration: 0.32s, 1.2s;
+        animation-duration: 0.60s, 1.2s;
         animation-delay: calc(var(--delay, 0s) - var(--capture-time)), calc(var(--highlight-delay, 3.4s) - var(--capture-time));
         animation-iteration-count: 1, 1;
       }
@@ -1002,25 +1006,31 @@ export function renderClipHtml(scene, config) {
       .output-separate-card {
         width: 100%;
         max-width: var(--content-max);
-        padding: 24px 28px;
-        border-radius: 24px;
+        padding: 14px 22px;
+        border-radius: 20px;
         background: #022010;
         border: 2px solid var(--success);
-        box-shadow: 0 20px 45px rgba(22, 163, 74, 0.22);
+        box-shadow: 0 16px 36px rgba(22, 163, 74, 0.18);
         color: #9DE8C8;
         font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        min-height: 90px;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
 
       .output-only-card strong,
       .output-separate-card strong {
         display: inline-block;
-        margin-bottom: 14px;
-        padding: 8px 12px;
+        margin-bottom: 6px;
+        padding: 4px 10px;
         border-radius: 999px;
         background: var(--success);
         color: #FFFFFF;
-        font-size: 30px;
+        font-size: 26px;
         letter-spacing: 1px;
+        width: max-content;
       }
 
       .output-only-card pre,
@@ -1028,8 +1038,8 @@ export function renderClipHtml(scene, config) {
         margin: 0;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
-        font-size: 42px;
-        line-height: 1.36;
+        font-size: 32px;
+        line-height: 1.25;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
         font-weight: 850;
       }
@@ -1394,8 +1404,14 @@ export function renderClipHtml(scene, config) {
     <script>
       const fitText = (selector, min, max) => {
         for (const element of document.querySelectorAll(selector)) {
-          element.style.fontSize = max + "px";
-          let size = max;
+          let elementMax = max;
+          const style = getComputedStyle(element);
+          const customMax = style.getPropertyValue("--code-font-size");
+          if (customMax && selector.includes(".code-pre")) {
+            elementMax = parseInt(customMax, 10) || max;
+          }
+          element.style.fontSize = elementMax + "px";
+          let size = elementMax;
           while (size > min && (element.scrollHeight > element.clientHeight + 2 || element.scrollWidth > element.clientWidth + 2)) {
             size -= 2;
             element.style.fontSize = size + "px";
@@ -1407,8 +1423,8 @@ export function renderClipHtml(scene, config) {
         fitText(".fit-heading", 64, 96);
         fitText(".fit-body, .scene-subtitle, .cta-share-card, .cta-save, .cta-follow, .next-topic, .paragraph-card p, .definition-card p, .timeline-card p, .generic-card p, .problem-card p, .concept-card p, .example-card p, .syntax-card p, .list-card p, .list-item-card p, .numbered-card p, .takeaway-card p, .split-card p, .quote-card p, .flow-node strong", 36, 50);
         fitText(".check-item p", 36, 50);
-        fitText(".code-pre", 42, 52);
-        fitText(".output-only-card pre, .output-separate-card pre", 36, 52);
+        fitText(".code-pre", 20, 44);
+        fitText(".output-only-card pre, .output-separate-card pre", 24, 36);
         document.querySelectorAll(".visible-element").forEach((element) => {
           element.style.visibility = "visible";
         });

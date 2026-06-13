@@ -98,8 +98,8 @@ export function validateScene(scene, config, context = {}) {
   if (!isValidDuration(scene, config)) {
     errors.push(`scene duration ${scene?.duration ?? "missing"}s is outside the configured export range`);
   }
-  if (estimateFinalHoldSeconds(scene) < (config.output?.finalHoldSeconds ?? 1.5)) {
-    errors.push(`estimated final hold ${estimateFinalHoldSeconds(scene).toFixed(2)}s is shorter than ${(config.output?.finalHoldSeconds ?? 1.5)}s`);
+  if (estimateFinalHoldSeconds(scene) < (config.output?.finalHoldSeconds ?? 0.5)) {
+    errors.push(`estimated final hold ${estimateFinalHoldSeconds(scene).toFixed(2)}s is shorter than ${(config.output?.finalHoldSeconds ?? 0.5)}s`);
   }
   if (minimumFinalTextOpacity(scene) < (config.output?.minFinalTextOpacity ?? 0.85)) {
     errors.push(`main text final opacity ${minimumFinalTextOpacity(scene)} is below ${(config.output?.minFinalTextOpacity ?? 0.85)}`);
@@ -112,6 +112,10 @@ export function validateScene(scene, config, context = {}) {
     }
     if (scene.content.code.code.includes("overflow") || scene.content.code.code.includes("scroll")) {
       errors.push("code block text must not contain inline overflow/scroll properties");
+    }
+    const codeCardHeight = estimateCodeHeight(scene.content.code);
+    if (codeCardHeight > 602) {
+      errors.push(`code card height ${codeCardHeight}px exceeds 35% of safe area (602px)`);
     }
   }
 
@@ -196,9 +200,19 @@ export function estimateSceneHeight(scene) {
   if (scene.type === "hero") return 620;
   if (content.blocks?.length) return estimateBlockSceneHeight(scene, header, footerGap);
   if (["code", "syntax", "example"].includes(scene.type) && content.code) {
-    return header + estimateCodeHeight(content.code) + (content.outputs?.length ?? 0) * 110 + footerGap;
+    const outputsHeight = (content.outputs ?? []).reduce((sum, output) => {
+      const lines = output.text ? output.text.split("\n").length : 1;
+      return sum + 120 + Math.max(90, Math.min(400, 28 + lines * 32 * 1.25));
+    }, 0);
+    return header + estimateCodeHeight(content.code) + outputsHeight + footerGap;
   }
-  if (scene.type === "output") return header + (content.outputs?.length ?? 0) * 220 + footerGap;
+  if (scene.type === "output") {
+    const outputsHeight = (content.outputs ?? []).reduce((sum, output) => {
+      const lines = output.text ? output.text.split("\n").length : 1;
+      return sum + Math.max(90, Math.min(400, 28 + lines * 32 * 1.25)) + 30;
+    }, 0);
+    return header + outputsHeight + footerGap;
+  }
   if (scene.type === "flow" || scene.type === "architecture") return header + (content.nodes?.length ?? 0) * 102 + footerGap;
   if (scene.type === "comparison") return header + estimateComparisonHeight(content.comparison) + footerGap;
   if (scene.type === "definition") {
@@ -302,7 +316,10 @@ function estimateBlockSceneHeight(scene, header, footerGap) {
     if (block.type === "bulletList" || block.type === "numberedList") return total + 72 + block.items.length * 64 + (block.label ? 46 : 0);
     if (block.type === "flow") return total + 70 + block.items.length * (block.items.length > 7 ? 38 : 50) + (block.label ? 46 : 0);
     if (block.type === "code") return total + estimateCodeHeight({ lines: block.text.split("\n").filter(Boolean).length });
-    if (block.type === "output") return total + 280; // Includes connector arrow and label spacing
+    if (block.type === "output") {
+      const lines = block.text ? block.text.split("\n").length : 1;
+      return total + 120 + Math.max(90, Math.min(400, 28 + lines * 32 * 1.25));
+    }
     if (block.type === "table") return total + 90 + block.rows.length * 112 + (block.label ? 46 : 0);
     return total;
   }, 0);
@@ -312,7 +329,23 @@ function estimateBlockSceneHeight(scene, header, footerGap) {
 
 function estimateCodeHeight(code) {
   const lines = code?.lines ?? 0;
-  return 100 + lines * 54 + 70;
+  let fontSize = 28;
+  let lineHeight = 1.15;
+  let verticalPadding = 20; // 10px top/bottom
+  
+  if (lines <= 4) {
+    fontSize = 32;
+  } else if (lines <= 7) {
+    fontSize = 28;
+  } else if (lines <= 11) {
+    fontSize = 24;
+  } else {
+    fontSize = 22;
+  }
+
+  const codeTextHeight = lines * fontSize * lineHeight;
+  const shellHeight = 48 + codeTextHeight + verticalPadding; // window-bar (48px) + text + padding
+  return Math.min(602, Math.max(360, shellHeight));
 }
 
 function estimateComparisonHeight(comparison) {
@@ -496,7 +529,7 @@ function normalizeForCompare(value) {
 function isValidDuration(scene, config) {
   const duration = scene?.duration;
   if (!Number.isFinite(duration)) return false;
-  const min = config.output?.minSceneSeconds ?? 3;
-  const max = config.output?.maxSceneSeconds ?? 8;
+  const min = config.output?.minSceneSeconds ?? 2.0;
+  const max = config.output?.maxSceneSeconds ?? 5.0;
   return duration >= min && duration <= max;
 }

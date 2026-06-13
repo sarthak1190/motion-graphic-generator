@@ -147,7 +147,7 @@ function buildSlideLockedScene(sectionItem, index, analysis, config, markdownSli
     title,
     "",
     content,
-    durationFor(type, content),
+    durationFor(type, content, config),
     sectionItem,
     {
       strictContentMode: true,
@@ -381,7 +381,7 @@ function contentFromBlocks(blocks) {
   };
 }
 
-function durationFor(type, content) {
+function durationFor(type, content, config) {
   const blocks = content.blocks ?? [];
   const wordCount = countWords(blocksToText(blocks));
   const hasCode = blocks.some((block) => block.type === "code");
@@ -393,25 +393,28 @@ function durationFor(type, content) {
     .reduce((total, block) => total + (block.items?.length ?? 0), 0);
 
   // Content-based dynamic timing:
-  //   heading only:           2 sec base
-  //   short explanation:     +3 sec (if wordCount > 0)
-  //   code block:            +2 sec
-  //   flowchart/diagram:     +2 sec
-  //   table:                 +2 sec
-  //   output/example:        +2 sec
+  //   heading only:           1.2 sec base
+  //   short explanation:     +1.0 sec (if wordCount > 0)
+  //   code block:            +1.2 sec
+  //   flowchart/diagram:     +1.0 sec
+  //   table:                 +1.0 sec
+  //   output/example:        +1.0 sec
   //   per bullet item:       +0.3 sec
-  // Total clamped to 3–8 seconds
+  // Total clamped to config limits or 2.0-5.0 seconds
 
-  let duration = 2;
+  let duration = 1.2;
 
-  if (wordCount > 0) duration += 3;
-  if (hasCode) duration += 2;
-  if (hasFlow) duration += 2;
-  if (hasTable) duration += 2;
-  if (hasOutput) duration += 2;
+  if (wordCount > 0) duration += 1.0;
+  if (hasCode) duration += 1.2;
+  if (hasFlow) duration += 1.0;
+  if (hasTable) duration += 1.0;
+  if (hasOutput) duration += 1.0;
   duration += bulletCount * 0.3;
 
-  return Number(clamp(duration, 3, 8).toFixed(2));
+  const min = config?.output?.minSceneSeconds ?? 2.0;
+  const max = config?.output?.maxSceneSeconds ?? 5.0;
+
+  return Number(clamp(duration, min, max).toFixed(2));
 }
 
 function fitDurationsToBudget(scenes, config) {
