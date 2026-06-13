@@ -100,6 +100,19 @@ export function renderClipHtml(scene, config) {
         overflow: hidden;
       }
 
+      .watermark-logo {
+        position: absolute;
+        bottom: 120px;
+        right: -80px;
+        width: 620px;
+        height: 620px;
+        color: var(--primary);
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 2;
+        transform: rotate(-12deg);
+      }
+
       .particle,
       .thin-line {
         position: absolute;
@@ -339,8 +352,7 @@ export function renderClipHtml(scene, config) {
         gap: 8px;
       }
 
-      .brand-footer span,
-      .brand-footer strong {
+      .brand-footer span {
         padding: 10px 16px;
         border-radius: 999px;
         background: rgba(255,255,255,0.72);
@@ -350,7 +362,15 @@ export function renderClipHtml(scene, config) {
       }
 
       .brand-footer strong {
-        font-size: 34px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.92);
+        border: 2px solid var(--primary);
+        box-shadow: 0 10px 25px rgba(248, 152, 32, 0.15);
+        white-space: nowrap;
+        font-size: 36px;
+        color: var(--ink);
+        font-weight: 900;
       }
 
       .scene {
@@ -358,9 +378,10 @@ export function renderClipHtml(scene, config) {
         z-index: 10;
         width: 100%;
         height: 100%;
-        padding: 80px var(--safe-x) 120px;
+        padding: 140px var(--safe-x) 160px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         gap: 22px;
       }
 
@@ -1457,6 +1478,14 @@ function renderBackgroundDecor() {
       <span class="particle" style="--delay: 1.3s"></span>
       <span class="thin-line" style="--delay: 0.5s"></span>
       <span class="thin-line" style="--delay: 1.0s"></span>
+      <svg class="watermark-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6 3c.3-1-.3-2 .5-2.5.5-.3.8 0 .5.7-.3 1 .3 2-.5 2.5-.5.3-.8 0-.5-.7z" fill="currentColor" opacity="0.8"/>
+        <path d="M10 2c.3-1-.3-2 .5-2.5.5-.3.8 0 .5.7-.3 1 .3 2-.5 2.5-.5.3-.8 0-.5-.7z" fill="currentColor" opacity="0.8"/>
+        <path d="M14 3c.3-1-.3-2 .5-2.5.5-.3.8 0 .5.7-.3 1 .3 2-.5 2.5-.5.3-.8 0-.5-.7z" fill="currentColor" opacity="0.8"/>
+        <path d="M4 9c0 0 0 6 6 6h2c6 0 6-6 6-6H4z" fill="currentColor"/>
+        <path d="M18 10.5c1.2 0 2 .5 2 1.25s-.8 1.25-2 1.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M2 17h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
   `;
 }

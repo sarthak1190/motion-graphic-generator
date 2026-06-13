@@ -1,14 +1,11 @@
 # DAY 12 - Loops in Java
 
-## Slide 1
 
 # Loops in Java
 
 Make Java repeat tasks automatically.
 
 ---
-
-## Slide 2
 
 # Learning Journey Recap
 
@@ -40,8 +37,6 @@ Day 11 - Switch Statement
 
 ---
 
-## Slide 3
-
 # Why Do We Need Loops?
 
 Repeating code manually becomes difficult.
@@ -64,11 +59,8 @@ Loops solve this automatically.
 
 ---
 
-## Slide 4
 
 # What Is A Loop?
-
-Start with the mental model.
 
 ### Definition
 
@@ -91,8 +83,6 @@ Smart. Simple. Efficient.
 
 ---
 
-## Slide 5
-
 # Loop Execution Flow
 
 Understand how every loop works internally.
@@ -114,8 +104,6 @@ Repeat
 Every loop follows this cycle.
 
 ---
-
-## Slide 6
 
 # The For Loop
 
@@ -151,7 +139,6 @@ for(int i=1; i<=5; i++)
 
 ---
 
-## Slide 7
 
 # Understanding The For Loop
 
@@ -175,7 +162,6 @@ Update changes the value after each iteration.
 
 ---
 
-## Slide 8
 
 # The While Loop
 
@@ -211,8 +197,6 @@ while(i <= 5) {
 
 ---
 
-## Slide 9
-
 # The Do While Loop
 
 Executes before checking the condition.
@@ -241,7 +225,6 @@ Runs at least once.
 
 ---
 
-## Slide 10
 
 # Real World Example
 
@@ -278,8 +261,6 @@ This is how real systems use loops.
 
 ---
 
-## Slide 11
-
 # Common Beginner Mistakes
 
 Avoid these problems.
@@ -304,8 +285,6 @@ while(true)
 Program never stops.
 
 ---
-
-## Slide 12
 
 # Key Takeaways
 

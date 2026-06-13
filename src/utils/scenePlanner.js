@@ -56,25 +56,23 @@ export function planScenes(analysis, config) {
 
 function buildSyntheticCtaScene(analysis, config) {
   const brandHandle = config.brand?.handle || "@java_learning_hub_";
+  const bullets = [
+    "Save this post for revision ☕",
+    `Follow ${brandHandle}`,
+    "Like & share this post! ❤️",
+    "Learn Java daily 🚀"
+  ];
   
   const content = {
     blocks: [
       {
         type: "bulletList",
-        items: [
-          "Save this post for revision ☕",
-          `Follow ${brandHandle}`,
-          "Learn Java daily 🚀"
-        ],
+        items: bullets,
         label: ""
       }
     ],
     paragraphs: [],
-    bullets: [
-      "Save this post for revision ☕",
-      `Follow ${brandHandle}`,
-      "Learn Java daily 🚀"
-    ],
+    bullets: bullets,
     numbered: [],
     quotes: [],
     nodes: [],

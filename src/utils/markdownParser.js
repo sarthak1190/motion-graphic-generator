@@ -276,24 +276,21 @@ export function parseMarkdownSlides(rawContent) {
       const level = heading[1].length;
       const text = compactWhitespace(cleanInlineMarkdown(heading[2]));
 
-      if (level === 1 && h2Count === 0) {
-        // H1 before any H2: create preamble/hero slide
-        flushTextBlocks();
-        pushCurrent();
+      if (level === 1) {
         if (!preamble) {
+          // H1 before any H2: create preamble/hero slide
+          flushTextBlocks();
+          pushCurrent();
           preamble = createSection(text, 1);
           preamble.slideNumber = 0;
           preamble.slideLabel = text;
-        }
-        continue;
-      }
-
-      if (level === 1 && h2Count > 0) {
-        // H1 after H2s: treat as in-slide heading, not a new preamble
-        flushTextBlocks();
-        const target = current ?? preamble;
-        if (target) {
-          target.blocks.push({ type: "heading", level: 1, text });
+        } else {
+          // Subsequent H1: treat as slide boundary (like H2)
+          pushCurrent();
+          h2Count += 1;
+          current = createSection(text, 2);
+          current.slideNumber = h2Count;
+          current.slideLabel = text;
         }
         continue;
       }
