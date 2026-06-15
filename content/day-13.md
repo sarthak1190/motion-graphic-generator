@@ -1,5 +1,11 @@
 # DAY 13 - Methods in Java
 
+## Hook
+
+Most **Java devs** write this **same line** **100 times...**
+
+---
+
 # Methods in Java
 
 Write Once. Reuse Anywhere.

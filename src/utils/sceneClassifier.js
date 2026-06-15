@@ -1,6 +1,7 @@
 import { compactWhitespace, scoreKeyword, stripMarkdown } from "./text.js";
 
 export const sceneTypes = [
+  "hook",
   "hero",
   "recap",
   "definition",
@@ -17,11 +18,13 @@ export const sceneTypes = [
   "mistakes",
   "interview",
   "takeaway",
+  "engage",
   "cta",
   "generic"
 ];
 
 const keywordMap = {
+  hook: ["hook", "scroll stopper", "attention", "did you know", "most developers", "stop doing"],
   recap: ["recap", "previously covered", "before this", "journey", "review", "earlier", "last time"],
   definition: ["definition", "what is", "meaning", "means", "refers to", "introduced as"],
   problem: ["why", "problem", "need", "exists", "pain", "challenge", "motivation", "limitation"],
@@ -40,6 +43,7 @@ const keywordMap = {
 };
 
 const priorityOrder = [
+  "hook",
   "recap",
   "takeaway",
   "interview",

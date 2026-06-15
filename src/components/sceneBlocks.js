@@ -2,13 +2,16 @@ import { renderCodeBlock } from "./codeBlock.js";
 import { delay, escapeHtml, textBlock } from "./html.js";
 
 export function renderSceneBody(scene, config) {
+  if (scene.type === "hook") return renderHook(scene, config);
   if (scene.type === "hero") return renderHero(scene, config);
+  if (scene.type === "engage") return renderEngage(scene, config);
   if (scene.type === "cta") return renderCta(scene, config);
   return renderSlideScene(scene);
 }
 
 export function renderBrandFooter(scene, config) {
   if (config.output?.showFooterChips === false) return "";
+  if (scene.type === "hook" || scene.type === "engage" || scene.type === "hero") return "";
 
   const day = scene.dayNumber ? `<span>${escapeHtml(`Day ${scene.dayNumber}`)}</span>` : "";
 
@@ -21,6 +24,7 @@ export function renderBrandFooter(scene, config) {
 }
 
 export function renderProgress(scene) {
+  if (scene.type === "hook") return "";
   return `
     <div class="clip-progress" aria-hidden="true">
       <span style="--progress: ${(scene.index / scene.total) * 100}%"></span>
@@ -29,13 +33,66 @@ export function renderProgress(scene) {
   `;
 }
 
+function formatHookText(text) {
+  let wordIndex = 0;
+  const parts = text.split(/(\*\*.*?\*\*|\s+)/);
+  return parts.map(part => {
+    if (!part) return "";
+    if (!part.trim()) return part; // Keep whitespace as-is
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const innerText = part.slice(2, -2);
+      return innerText.split(/\s+/).filter(Boolean).map(word => {
+        const html = `<span class="hook-word hook-word-accent" style="--word-index: ${wordIndex}">${escapeHtml(word)}</span>`;
+        wordIndex += 1;
+        return html;
+      }).join(" ");
+    }
+    return part.split(/\s+/).filter(Boolean).map(word => {
+      const html = `<span class="hook-word" style="--word-index: ${wordIndex}">${escapeHtml(word)}</span>`;
+      wordIndex += 1;
+      return html;
+    }).join(" ");
+  }).join("");
+}
+
+function renderHook(scene, config) {
+  const hookText = scene.content?.paragraphs?.[0] || scene.title || "Wait for it...";
+  return `
+    <section class="scene scene-hook" data-scene-type="hook">
+      <div class="hook-flash" aria-hidden="true"></div>
+      <div class="hook-glow-orb hook-glow-orb-1" aria-hidden="true"></div>
+      <div class="hook-glow-orb hook-glow-orb-2" aria-hidden="true"></div>
+      <div class="hook-content">
+        <h1 class="hook-text animated visible-element" style="--delay: 0s" data-visible="title">${formatHookText(hookText)}</h1>
+        <div class="hook-accent-line animated visible-element" style="--delay: 0.35s"></div>
+        <div class="hook-brand animated visible-element" style="--delay: 0.65s" data-visible="brand">${escapeHtml(config.brand?.handle || "@java_learning_hub_")}</div>
+      </div>
+    </section>
+  `;
+}
+
+function renderEngage(scene, config) {
+  const emoji = scene.content?.engageEmoji || "💾";
+  const text = scene.content?.engageText || scene.title || "Save this for later";
+  return `
+    <section class="scene scene-engage" data-scene-type="engage">
+      <div class="engage-pulse-ring" aria-hidden="true"></div>
+      <div class="engage-pulse-ring engage-pulse-ring-2" aria-hidden="true"></div>
+      <div class="engage-emoji animated visible-element" style="--delay: 0s" data-visible="emoji">${escapeHtml(emoji)}</div>
+      <p class="engage-text animated visible-element" style="--delay: 0.25s" data-visible="text">${textBlock(text)}</p>
+      <div class="engage-hint animated visible-element" style="--delay: 0.55s" data-visible="hint">Double tap ❤️</div>
+    </section>
+  `;
+}
+
 function renderHero(scene, config) {
+  const kickerText = scene.content.kicker || (scene.dayNumber ? `Day ${scene.dayNumber}` : "");
   return `
     <section class="scene scene-hero" data-scene-type="hero">
-      ${scene.content.kicker ? `<div class="badge animated visible-element" ${delay(0, 0.15)} data-visible="badge">${escapeHtml(scene.content.kicker)}</div>` : ""}
-      <h1 class="hero-title animated visible-element fit-heading" ${delay(0, 0.25)} data-visible="title">${textBlock(scene.title)}</h1>
-      ${renderBlocks(scene, 0.55)}
-      <div class="brand-chip animated visible-element" ${delay(0, 0.85)} data-visible="brand">${escapeHtml(scene.content.brandHandle || config.brand.handle)}</div>
+      ${kickerText ? `<div class="badge animated visible-element" ${delay(0, 0.05)} data-visible="badge">${escapeHtml(kickerText)}</div>` : ""}
+      <h1 class="hero-title animated visible-element fit-heading" ${delay(0, 0.08)} data-visible="title">${textBlock(scene.title)}</h1>
+      ${renderBlocks(scene, 0.35)}
+      <div class="brand-chip animated visible-element" ${delay(0, 0.50)} data-visible="brand">${escapeHtml(scene.content.brandHandle || config.brand.handle)}</div>
     </section>
   `;
 }
@@ -243,16 +300,25 @@ function renderSeparateOutputs(outputs, codeBlockLinesCount, visualIndexStart, b
 }
 
 function renderCta(scene, config) {
+  const nextDayNumber = scene.content?.nextDayNumber;
   const items = scene.content.bullets && scene.content.bullets.length > 0
     ? scene.content.bullets
     : [
-        "Save this post for revision ☕",
-        `Follow ${config.brand?.handle || "@java_learning_hub_"}`,
-        "Learn Java daily 🚀"
+        "💾 Save this for revision",
+        `Follow ${config.brand?.handle || "@java_learning_hub_"} for daily content`,
+        "❤️ Like & Share with friends",
+        "🔥 More coming tomorrow!"
       ];
 
   return `
     <section class="scene scene-cta" data-scene-type="cta">
+      <div class="cta-confetti" aria-hidden="true">
+        <span class="confetti-piece" style="--x: 15%; --hue: 32; --delay: 0.8s"></span>
+        <span class="confetti-piece" style="--x: 35%; --hue: 200; --delay: 1.1s"></span>
+        <span class="confetti-piece" style="--x: 55%; --hue: 120; --delay: 0.9s"></span>
+        <span class="confetti-piece" style="--x: 75%; --hue: 280; --delay: 1.3s"></span>
+        <span class="confetti-piece" style="--x: 90%; --hue: 50; --delay: 1.0s"></span>
+      </div>
       <div class="success-icon-wrapper animated visible-element" style="--delay: 0.25s">
         <div class="success-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -260,7 +326,7 @@ function renderCta(scene, config) {
           </svg>
         </div>
       </div>
-      <h2 class="cta-subtitle animated visible-element" style="--delay: 0.45s">Today's Topic Complete</h2>
+      <h2 class="cta-subtitle animated visible-element" style="--delay: 0.45s">Today's Topic Complete 🎉</h2>
       
       <div class="cta-list animated visible-element" style="--delay: 0.65s" data-visible="list">
         ${items.map((item, index) => `
@@ -270,6 +336,13 @@ function renderCta(scene, config) {
           </div>
         `).join("")}
       </div>
+      ${nextDayNumber ? `
+        <div class="next-topic-teaser animated visible-element" style="--delay: ${(0.80 + items.length * 0.15 + 0.2).toFixed(2)}s" data-visible="teaser">
+          <span class="teaser-badge">COMING NEXT</span>
+          <strong>Day ${nextDayNumber}</strong>
+          <p>Follow to get notified 🔔</p>
+        </div>
+      ` : ""}
     </section>
   `;
 }

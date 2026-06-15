@@ -133,5 +133,77 @@ export function animationCss() {
       0%, 45% { opacity: 1; }
       46%, 100% { opacity: 0; }
     }
+
+    @keyframes hookSlam {
+      0% { opacity: 0; transform: scale(1.35) translateY(-30px); filter: blur(6px); }
+      30% { opacity: 1; filter: blur(0); }
+      55% { transform: scale(0.97) translateY(2px); }
+      72% { transform: scale(1.02) translateY(-1px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes hookFlash {
+      0% { opacity: 0.85; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes accentSweep {
+      0% { width: 0; opacity: 0; }
+      30% { opacity: 1; }
+      100% { width: 100%; opacity: 1; }
+    }
+
+    @keyframes hookPulse {
+      0%, 100% { opacity: 0.06; transform: scale(1); }
+      50% { opacity: 0.14; transform: scale(1.04); }
+    }
+
+    @keyframes hookGlowOrb {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.12; }
+      50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.22; }
+      100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.12; }
+    }
+
+    @keyframes engagePop {
+      0% { opacity: 0; transform: scale(0.3) rotate(-12deg); }
+      40% { opacity: 1; transform: scale(1.15) rotate(3deg); }
+      60% { transform: scale(0.95) rotate(-1deg); }
+      80% { transform: scale(1.03) rotate(0deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.8); opacity: 0.6; border-width: 4px; }
+      100% { transform: scale(2.2); opacity: 0; border-width: 1px; }
+    }
+
+    @keyframes engageTextSlide {
+      0% { opacity: 0; transform: translateY(24px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes confettiFloat {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes zoomBlur {
+      0% { opacity: 0; transform: scale(0.7); filter: blur(8px); }
+      40% { opacity: 1; filter: blur(0); }
+      100% { opacity: 1; transform: scale(1); filter: none; }
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translate3d(0, 80px, 0) scale(0.96); }
+      35% { opacity: 1; }
+      70% { transform: translate3d(0, -4px, 0) scale(1.01); }
+      100% { opacity: 1; transform: none; }
+    }
+
+    @keyframes heroBurst {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 0.3; }
+      100% { opacity: 0; transform: scale(3); }
+    }
   `;
 }

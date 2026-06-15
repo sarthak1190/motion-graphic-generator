@@ -2,22 +2,39 @@ import { compactWhitespace, uniqueByText } from "./text.js";
 import { classifySection, hasFlowSignal } from "./sceneClassifier.js";
 
 const baseDurations = {
+  hook: 1.8,
   hero: 3,
   code: 4.5,
   flow: 4.5,
   comparison: 5,
+  engage: 1.5,
   cta: 3.6,
   generic: 3.4
 };
 
 const priorities = {
+  hook: 110,
   hero: 100,
   code: 92,
   flow: 90,
   comparison: 88,
+  engage: 75,
   cta: 70,
   generic: 80
 };
+
+const hookTemplates = [
+  "Most **developers** get this **wrong**...",
+  "Stop doing **this** in your code...",
+  "The trick **nobody tells you** about **{topic}**...",
+  "You've been writing **{topic} wrong** this whole time...",
+  "Wait... **{topic}** can do **THIS**?",
+  "This **one concept** changed **everything** for me...",
+  "If you don't know **{topic}**, you're **falling behind**...",
+  "The **#1 mistake** beginners make with **{topic}**...",
+  "**99% of beginners** don't know this...",
+  "This is why your **code breaks**..."
+];
 
 export function planScenes(analysis, config) {
   const slideSections = collectSlideSections(analysis);
@@ -25,18 +42,29 @@ export function planScenes(analysis, config) {
     buildSlideLockedScene(sectionItem, index, analysis, config, slideSections.length)
   );
 
+  // Inject hook scene at the beginning
+  const hookScene = buildHookScene(scenes, analysis, config);
+  if (hookScene) {
+    scenes.unshift(hookScene);
+  }
+
   // Fallback CTA Scene Auto-generation
   const hasCta = scenes.some((s) => s.type === "cta");
   if (!hasCta) {
     scenes.push(buildSyntheticCtaScene(analysis, config));
   }
 
+  // Inject engagement prompts (max 2 per reel)
+  // injectEngagementPrompts(scenes, config);
+
   // Ensure metadata slide counts and indices match the planned output
+  const syntheticCount = scenes.filter((s) => s.metadata?.isSynthetic).length;
   const finalCount = scenes.length;
   for (let index = 0; index < finalCount; index += 1) {
     const s = scenes[index];
     if (s.metadata) {
       s.metadata.markdownSlideCount = finalCount;
+      s.metadata.syntheticSceneCount = syntheticCount;
       s.metadata.slideIndex = index + 1;
       s.metadata.slideNumber = index + 1;
     }
@@ -54,13 +82,138 @@ export function planScenes(analysis, config) {
   }));
 }
 
+function extractRawHookText(rawMarkdown) {
+  if (!rawMarkdown) return null;
+  const match = rawMarkdown.match(/##\s+Hook\s*\n+([\s\S]*?)(?=\n+---|\n+#|$)/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return null;
+}
+
+function buildHookScene(scenes, analysis, config) {
+  // Check if first scene is already a hook from markdown
+  if (scenes.length > 0 && scenes[0].type === "hook") {
+    return null; // Already have a hook, don't duplicate
+  }
+
+  // Check if any scene is typed as hook (from markdown ## Hook section)
+  const existingHookIndex = scenes.findIndex((s) => s.type === "hook");
+  if (existingHookIndex >= 0) {
+    const hookScene = scenes.splice(existingHookIndex, 1)[0];
+    
+    // Extract raw hook text with formatting intact
+    const rawHook = extractRawHookText(analysis.raw);
+    if (rawHook) {
+      hookScene.title = rawHook;
+      if (hookScene.content) {
+        hookScene.content.paragraphs = [rawHook];
+      }
+    }
+    
+    return hookScene;
+  }
+
+  // Auto-generate hook from topic name
+  const topicName = analysis.topicName || "Java";
+  const dayNumber = analysis.dayNumber;
+  const templateIndex = (dayNumber ?? Math.floor(Math.random() * hookTemplates.length)) % hookTemplates.length;
+  const hookText = hookTemplates[templateIndex].replace(/\{topic\}/g, topicName);
+
+  const content = {
+    blocks: [{ type: "paragraph", text: hookText }],
+    paragraphs: [hookText],
+    bullets: [],
+    numbered: [],
+    quotes: [],
+    nodes: [],
+    codes: [],
+    code: null,
+    outputs: [],
+    comparison: null,
+    cta: []
+  };
+
+  return scene(
+    "hook",
+    priorities.hook || 110,
+    hookText,
+    "",
+    content,
+    1.8,
+    null,
+    {
+      strictContentMode: false,
+      isSynthetic: true,
+      slideIndex: null
+    }
+  );
+}
+
+function injectEngagementPrompts(scenes, config) {
+  const engagePrompts = [
+    { emoji: "💾", text: "Save this for later", trigger: ["code", "syntax"] },
+    { emoji: "📤", text: "Share with a dev friend", trigger: ["comparison", "flow", "architecture"] },
+    { emoji: "💡", text: "Did you know this?", trigger: ["definition", "concept"] }
+  ];
+
+  let injected = 0;
+  const maxEngageScenes = 2;
+
+  for (let i = scenes.length - 1; i >= 0 && injected < maxEngageScenes; i -= 1) {
+    const currentScene = scenes[i];
+    if (currentScene.type === "cta" || currentScene.type === "hook" || currentScene.type === "hero" || currentScene.type === "engage") continue;
+
+    const matchingPrompt = engagePrompts.find((prompt) =>
+      prompt.trigger.includes(currentScene.type)
+    );
+
+    if (!matchingPrompt) continue;
+
+    const engageContent = {
+      blocks: [{ type: "paragraph", text: matchingPrompt.text }],
+      paragraphs: [matchingPrompt.text],
+      bullets: [],
+      numbered: [],
+      quotes: [],
+      nodes: [],
+      codes: [],
+      code: null,
+      outputs: [],
+      comparison: null,
+      cta: [],
+      engageEmoji: matchingPrompt.emoji,
+      engageText: matchingPrompt.text
+    };
+
+    const engageScene = scene(
+      "engage",
+      priorities.engage || 75,
+      matchingPrompt.text,
+      "",
+      engageContent,
+      1.5,
+      null,
+      {
+        strictContentMode: false,
+        isSynthetic: true,
+        slideIndex: null
+      }
+    );
+
+    scenes.splice(i + 1, 0, engageScene);
+    injected += 1;
+  }
+}
+
 function buildSyntheticCtaScene(analysis, config) {
   const brandHandle = config.brand?.handle || "@java_learning_hub_";
+  const nextDayNumber = (analysis.dayNumber ?? 0) + 1;
   const bullets = [
-    "Save this post for revision ☕",
-    `Follow ${brandHandle}`,
-    "Like & share this post! ❤️",
-    "Learn Java daily 🚀"
+    "💾 Save this for revision",
+    `Follow ${brandHandle} for daily content`,
+    "❤️ Like & Share with friends",
+    `🔥 Tomorrow: Day ${nextDayNumber} drops soon!`
   ];
   
   const content = {
@@ -80,7 +233,8 @@ function buildSyntheticCtaScene(analysis, config) {
     code: null,
     outputs: [],
     comparison: null,
-    cta: []
+    cta: [],
+    nextDayNumber
   };
 
   const title = "Today's Topic Complete";
@@ -94,7 +248,8 @@ function buildSyntheticCtaScene(analysis, config) {
     5.0,
     null,
     {
-      strictContentMode: true,
+      strictContentMode: false,
+      isSynthetic: true,
       slideIndex: null
     }
   );
@@ -161,6 +316,9 @@ function buildSlideLockedScene(sectionItem, index, analysis, config, markdownSli
 }
 
 function inferSceneType(blocks, sectionItem, index) {
+  // Check for explicit hook
+  const title = (sectionItem?.title ?? "").toLowerCase();
+  if (/^hook$/i.test(title.trim())) return "hook";
   if (index === 0) return "hero";
   if (isCtaSlide(sectionItem, blocks)) return "cta";
   if (blocks.some((block) => block.type === "table")) return "comparison";
@@ -428,6 +586,14 @@ function fitDurationsToBudget(scenes, config) {
       minD = 4.0;
       maxD = 6.0;
     }
+    if (sceneItem.type === "hook") {
+      minD = 1.5;
+      maxD = 2.0;
+    }
+    if (sceneItem.type === "engage") {
+      minD = 1.5;
+      maxD = 2.0;
+    }
     return {
       ...sceneItem,
       duration: Number(
@@ -448,6 +614,14 @@ function fitDurationsToBudget(scenes, config) {
       minD = 4.0;
       maxD = 6.0;
     }
+    if (sceneItem.type === "hook") {
+      minD = 1.5;
+      maxD = 2.0;
+    }
+    if (sceneItem.type === "engage") {
+      minD = 1.5;
+      maxD = 2.0;
+    }
     return {
       ...sceneItem,
       duration: Number(clamp(sceneItem.duration * scale, minD, maxD).toFixed(2))
@@ -465,6 +639,14 @@ function fitDurationsToBudget(scenes, config) {
     if (index === scaled.length - 1 && sceneItem.type === "cta") {
       minD = 4.0;
       maxD = 6.0;
+    }
+    if (sceneItem.type === "hook") {
+      minD = 1.5;
+      maxD = 2.0;
+    }
+    if (sceneItem.type === "engage") {
+      minD = 1.5;
+      maxD = 2.0;
     }
     return {
       ...sceneItem,
@@ -487,14 +669,16 @@ function scene(type, priority, title, subtitle, content, duration, sectionItem, 
     metadata: {
       sourceHeading,
       sourceHeadings: [sourceHeading],
-      sourceKeys: [sectionKey(sectionItem)],
+      sourceKeys: sectionItem ? [sectionKey(sectionItem)] : [],
       sourceLevel: sectionItem?.level ?? 0,
       parentHeading: sectionItem?.parentTitle ?? "",
       sourceText: sectionItem?.body ?? sectionItem?.title ?? "",
-      strictContentMode: extra.strictContentMode === true,
+      strictContentMode: extra.strictContentMode !== false,
+      isSynthetic: extra.isSynthetic === true,
       slideIndex: extra.slideIndex ?? sectionItem?.slideNumber ?? null,
       slideNumber: sectionItem?.slideNumber ?? extra.slideIndex ?? null,
       markdownSlideCount: extra.markdownSlideCount ?? null,
+      syntheticSceneCount: extra.syntheticSceneCount ?? 0,
       slideTitle: extra.slideTitle ?? title,
       originalBlockCount: extra.originalBlockCount ?? cleanedContent.blocks?.length ?? 0,
       visibleBlockCount: extra.visibleBlockCount ?? cleanedContent.blocks?.length ?? 0,
@@ -511,10 +695,12 @@ function scene(type, priority, title, subtitle, content, duration, sectionItem, 
 
 function animationTemplateFor(type) {
   const templates = {
+    hook: "hookSlam",
     hero: "heroZoomFade",
     flow: "flowSequential",
     comparison: "comparisonSlide",
     code: "codeTypewriter",
+    engage: "engagePop",
     cta: "ctaCardReveal",
     generic: "premiumCardReveal"
   };

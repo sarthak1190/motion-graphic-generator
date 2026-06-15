@@ -84,11 +84,11 @@ export function validateScene(scene, config, context = {}) {
   const errors = [];
 
   if (!scene?.title?.trim()) errors.push("scene.title is missing");
-  if (!["hero", "cta"].includes(scene?.type) && !hasVisibleContent(scene)) errors.push("scene.content has no visible element");
-  if (!["hero", "cta"].includes(scene?.type) && !hasBodyContent(scene)) errors.push("scene body is missing");
+  if (!["hero", "cta", "hook", "engage"].includes(scene?.type) && !hasVisibleContent(scene)) errors.push("scene.content has no visible element");
+  if (!["hero", "cta", "hook", "engage"].includes(scene?.type) && !hasBodyContent(scene)) errors.push("scene body is missing");
   if (hasEmptyCards(scene)) errors.push("scene contains empty cards/list items");
-  if (!scene?.metadata?.strictContentMode) errors.push("strict content mode metadata is missing");
-  if ((scene?.metadata?.sourceKeys ?? []).length !== 1) errors.push("slide lock failed: scene must map to exactly one markdown slide");
+  if (!scene?.metadata?.strictContentMode && !scene?.metadata?.isSynthetic) errors.push("strict content mode metadata is missing");
+  if (!scene?.metadata?.isSynthetic && (scene?.metadata?.sourceKeys ?? []).length !== 1) errors.push("slide lock failed: scene must map to exactly one markdown slide");
   if ((scene?.content?.blocks?.length ?? 0) > (config.output?.maxVisibleBlocksPerScene ?? 5)) {
     errors.push(`scene has ${scene.content.blocks.length} visible text blocks, maximum is ${config.output?.maxVisibleBlocksPerScene ?? 5}`);
   }
@@ -133,9 +133,9 @@ export function validateScene(scene, config, context = {}) {
     }
   }
 
-  if (scene.type !== "cta" && hasForbiddenGeneratedText(scene)) errors.push("scene contains generated helper text that is not allowed in strict content mode");
-  if (scene.type !== "cta" && !sourceContains(scene, scene.title)) errors.push("scene title is not present in the markdown source");
-  if (scene.type !== "cta" && hasNonSourceBodyText(scene)) errors.push("scene contains body text that is not present in the markdown source");
+  if (scene.type !== "cta" && scene.type !== "hook" && scene.type !== "engage" && hasForbiddenGeneratedText(scene)) errors.push("scene contains generated helper text that is not allowed in strict content mode");
+  if (scene.type !== "cta" && scene.type !== "hook" && scene.type !== "engage" && !sourceContains(scene, scene.title)) errors.push("scene title is not present in the markdown source");
+  if (scene.type !== "cta" && scene.type !== "hook" && scene.type !== "engage" && hasNonSourceBodyText(scene)) errors.push("scene contains body text that is not present in the markdown source");
 
   const estimatedHeight = estimateSceneHeight(scene);
   if (estimatedHeight > maxContentHeight) {
@@ -158,7 +158,9 @@ function validateReel(scenes, config) {
   const maxScenes = config.output?.maxClips ?? 60;
   const markdownSlideCount = scenes[0]?.metadata?.markdownSlideCount;
 
-  if (Number.isFinite(markdownSlideCount) && scenes.length !== markdownSlideCount) {
+  const syntheticCount = scenes[0]?.metadata?.syntheticSceneCount ?? 0;
+
+  if (Number.isFinite(markdownSlideCount) && syntheticCount === 0 && scenes.length !== markdownSlideCount) {
     errors.push(`scene count ${scenes.length} does not match markdown H2 heading count ${markdownSlideCount}`);
   }
   if (scenes.length < minScenes) errors.push(`scene count ${scenes.length} is below minClips ${minScenes}`);
@@ -198,6 +200,8 @@ export function estimateSceneHeight(scene) {
   const footerGap = scene.type === "takeaway" || scene.type === "cta" ? 190 : 50;
 
   if (scene.type === "hero") return 620;
+  if (scene.type === "hook") return 400;
+  if (scene.type === "engage") return 420;
   if (content.blocks?.length) return estimateBlockSceneHeight(scene, header, footerGap);
   if (["code", "syntax", "example"].includes(scene.type) && content.code) {
     const outputsHeight = (content.outputs ?? []).reduce((sum, output) => {
@@ -361,8 +365,10 @@ function estimateFinalHoldSeconds(scene) {
 function estimateLastContentMotionEnd(scene) {
   const content = scene.content ?? {};
 
-  if (scene.type === "hero") return 1.31;
+  if (scene.type === "hero") return 0.66;
   if (scene.type === "cta") return 1.45;
+  if (scene.type === "hook") return 0.7;
+  if (scene.type === "engage") return 0.6;
 
   if (content.blocks?.length) {
     const cardCount = countCards(content);
@@ -529,6 +535,11 @@ function normalizeForCompare(value) {
 function isValidDuration(scene, config) {
   const duration = scene?.duration;
   if (!Number.isFinite(duration)) return false;
+
+  // Hook and engage scenes have their own duration ranges
+  if (scene?.type === "hook") return duration >= 1.5 && duration <= 2.0;
+  if (scene?.type === "engage") return duration >= 1.5 && duration <= 2.0;
+
   const min = config.output?.minSceneSeconds ?? 2.0;
   const max = config.output?.maxSceneSeconds ?? 5.0;
   return duration >= min && duration <= max;
