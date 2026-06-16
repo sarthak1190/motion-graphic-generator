@@ -57,5 +57,16 @@
       "--disable-setuid-sandbox",
       "--font-render-hinting=none"
     ]
+  },
+  "features": {
+    "voiceover": {
+      "enabled": false,
+      "voice": "Daniel",
+      "delayMs": 800
+    },
+    "introVideo": {
+      "enabled": true,
+      "path": "video/Scooter-Fall-on-Stairs.mp4"
+    }
   }
 }

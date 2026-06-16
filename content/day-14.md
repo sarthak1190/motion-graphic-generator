@@ -4,6 +4,8 @@
 
 Stop creating **10 different variables** for **10 related values...**
 
+VO: Stop creating ten different variables for ten related values. Let me show you why this is bad, and what you should be doing instead.
+
 ---
 
 # Arrays in Java

@@ -45,6 +45,9 @@ export function planScenes(analysis, config) {
   // Inject hook scene at the beginning
   const hookScene = buildHookScene(scenes, analysis, config);
   if (hookScene) {
+    if (!hookScene.voiceoverText) {
+      hookScene.voiceoverText = hookScene.content?.paragraphs?.[0] || hookScene.title;
+    }
     scenes.unshift(hookScene);
   }
 
@@ -86,7 +89,9 @@ function extractRawHookText(rawMarkdown) {
   if (!rawMarkdown) return null;
   const match = rawMarkdown.match(/##\s+Hook\s*\n+([\s\S]*?)(?=\n+---|\n+#|$)/i);
   if (match && match[1]) {
-    return match[1].trim();
+    const raw = match[1].trim();
+    const lines = raw.split("\n").filter((line) => !/^(?:VO|Voiceover)\s*:/i.test(line.trim()));
+    return lines.join("\n").trim();
   }
   return null;
 }
@@ -288,13 +293,24 @@ function buildSlideLockedScene(sectionItem, index, analysis, config, markdownSli
   const title = compactWhitespace(sectionItem.title || firstTextFromBlocks(normalized) || "Untitled");
   const bodyBlocks = normalized;
   const groupedBlocks = groupParagraphRuns(mergeHeadingLabels(bodyBlocks));
+
+  // Extract voiceover block if it exists
+  const voBlockIndex = groupedBlocks.findIndex((b) =>
+    b.type === "paragraph" && /^(?:VO|Voiceover)\s*:/i.test(b.text)
+  );
+  let voiceoverText = null;
+  if (voBlockIndex >= 0) {
+    const voBlock = groupedBlocks.splice(voBlockIndex, 1)[0];
+    voiceoverText = voBlock.text.replace(/^(?:VO|Voiceover)\s*:\s*/i, "").trim();
+  }
+
   const visibleBlocks = selectVisibleBlocks(groupedBlocks, config);
   const type = inferSceneType(visibleBlocks, sectionItem, index);
   const content = contentFromBlocks(visibleBlocks);
 
   // Brand handle is rendered via footer only, never injected into scene content
 
-  return scene(
+  const sc = scene(
     type,
     priorities[type] ?? priorities.generic,
     title,
@@ -313,6 +329,11 @@ function buildSlideLockedScene(sectionItem, index, analysis, config, markdownSli
       slideIndex: index + 1
     }
   );
+
+  if (voiceoverText) {
+    sc.voiceoverText = voiceoverText;
+  }
+  return sc;
 }
 
 function inferSceneType(blocks, sectionItem, index) {

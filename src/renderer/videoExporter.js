@@ -7,14 +7,23 @@ export async function assertFfmpeg() {
   await run("ffmpeg", ["-version"], { quiet: true });
 }
 
-export async function exportMp4(framesDir, outputPath, config) {
+export async function exportMp4(framesDir, outputPath, config, audioPath = null) {
   const { fps, width, height } = config.canvas;
-  await run("ffmpeg", [
+  const args = [
     "-y",
     "-framerate",
     String(fps),
     "-i",
-    path.join(framesDir, "frame_%05d.png"),
+    path.join(framesDir, "frame_%05d.png")
+  ];
+
+  if (audioPath) {
+    args.push("-i", audioPath);
+  } else {
+    args.push("-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100");
+  }
+
+  args.push(
     "-vf",
     `scale=${width}:${height}:flags=lanczos,format=yuv420p`,
     "-c:v",
@@ -23,13 +32,17 @@ export async function exportMp4(framesDir, outputPath, config) {
     "slow",
     "-crf",
     "18",
+    "-c:a",
+    "aac",
+    "-shortest",
     "-pix_fmt",
     "yuv420p",
     "-movflags",
     "+faststart",
     outputPath
-  ]);
+  );
 
+  await run("ffmpeg", args);
   return outputPath;
 }
 

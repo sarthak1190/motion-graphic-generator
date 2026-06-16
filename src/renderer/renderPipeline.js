@@ -9,6 +9,7 @@ import { sceneDebugSummary, validateScenes } from "../utils/sceneValidator.js";
 import { writeClipHtml } from "./htmlRenderer.js";
 import { captureFrames, captureSceneScreenshots } from "./frameRenderer.js";
 import { assertFfmpeg, combineMp4Clips, exportGif, exportGifFromVideo, exportMp4 } from "./videoExporter.js";
+import { downloadSnapSound, generateTTS, measureAudioDuration, mixSnapAndVoiceover, transcodeIntroVideo } from "../utils/audioProcessor.js";
 
 export async function renderContentFile(contentPath, config, mode = "both") {
   const content = await loadContentFile(contentPath);
@@ -41,7 +42,46 @@ export async function renderContentFile(contentPath, config, mode = "both") {
   await ensureDir(path.join(outputDir, "mp4"));
   await ensureDir(path.join(outputDir, "gif"));
 
+  const tempAudioDir = path.join(outputDir, "audio");
+  await ensureDir(tempAudioDir);
+
   for (const scene of scenes) {
+    let sceneAudioPath = null;
+    const isVoEnabled = config.features?.voiceover?.enabled ?? false;
+
+    if (isVoEnabled && scene.voiceoverText) {
+      try {
+        const voPath = path.join(tempAudioDir, `${scene.id}_vo.mp3`);
+        await generateTTS(scene.voiceoverText, voPath, config.features?.voiceover?.voice || "Samantha");
+
+        if (scene.type === "hook") {
+          const snapPath = path.join(process.cwd(), "assets", "finger-snap.mp3");
+          await downloadSnapSound(snapPath);
+          const mixedPath = path.join(tempAudioDir, `${scene.id}_mixed.mp3`);
+          await mixSnapAndVoiceover(snapPath, voPath, mixedPath, config.features?.voiceover?.delayMs ?? 800);
+          sceneAudioPath = mixedPath;
+        } else {
+          sceneAudioPath = voPath;
+        }
+
+        const audioDuration = await measureAudioDuration(sceneAudioPath);
+        const currentDuration = scene.duration ?? config.canvas.durationSeconds;
+        scene.duration = Math.max(currentDuration, audioDuration + 0.5);
+        logger.info(`Adjusted ${scene.id} duration to ${scene.duration}s based on audio length (${audioDuration}s)`);
+      } catch (audioError) {
+        logger.error(`Failed to process audio for ${scene.id}: ${audioError.message}. Proceeding with default duration.`);
+      }
+    } else if (scene.type === "hook") {
+      try {
+        const snapPath = path.join(process.cwd(), "assets", "finger-snap.mp3");
+        await downloadSnapSound(snapPath);
+        sceneAudioPath = snapPath;
+        logger.info(`Using transition snap sound for ${scene.id} (voiceover disabled)`);
+      } catch (audioError) {
+        logger.error(`Failed to get snap sound for hook slide: ${audioError.message}`);
+      }
+    }
+
     logger.info(`Rendering ${scene.id}: ${scene.title}`);
     const htmlPath = await writeClipHtml(scene, config, outputDir);
     htmlPaths.push(htmlPath);
@@ -54,7 +94,7 @@ export async function renderContentFile(contentPath, config, mode = "both") {
 
     if (shouldExportMp4Clips) {
       const mp4Path = path.join(outputDir, "mp4", `${scene.id.replace("clip-", "clip_")}.mp4`);
-      await exportMp4(framesDir, mp4Path, config);
+      await exportMp4(framesDir, mp4Path, config, sceneAudioPath);
       mp4Paths.push(mp4Path);
     }
 
@@ -69,10 +109,35 @@ export async function renderContentFile(contentPath, config, mode = "both") {
     }
   }
 
+  // Clean up temporary audio files if not configured to keep
+  if (!config.output.keepFrames) {
+    await fs.rm(tempAudioDir, { recursive: true, force: true }).catch(() => {});
+  }
+
+  let conformedIntroPath = null;
+  const isIntroEnabled = config.features?.introVideo?.enabled ?? false;
+  const introSrcPath = config.features?.introVideo?.path;
+
+  if (shouldExportMp4Clips && mp4Paths.length && isIntroEnabled && introSrcPath) {
+    try {
+      const introFullPath = path.isAbsolute(introSrcPath) ? introSrcPath : path.join(process.cwd(), introSrcPath);
+      await fs.access(introFullPath);
+      conformedIntroPath = path.join(outputDir, "temp_intro_conformed.mp4");
+      await transcodeIntroVideo(introFullPath, conformedIntroPath, config);
+      mp4Paths.unshift(conformedIntroPath);
+      logger.info(`Prepended conformed intro video to reel: ${conformedIntroPath}`);
+    } catch (introError) {
+      logger.error(`Could not process intro video: ${introError.message}`);
+    }
+  }
+
   let combinedReelPath = null;
   if (shouldExportMp4Clips && mp4Paths.length) {
     combinedReelPath = path.join(outputDir, "combined_reel.mp4");
     await combineMp4Clips(mp4Paths, combinedReelPath);
+    if (conformedIntroPath) {
+      await fs.rm(conformedIntroPath, { force: true }).catch(() => {});
+    }
   }
 
   let combinedGifPath = null;

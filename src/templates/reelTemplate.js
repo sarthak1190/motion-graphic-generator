@@ -1466,32 +1466,15 @@ export function renderClipHtml(scene, config) {
         justify-content: center;
         padding: 120px var(--safe-x);
         text-align: center;
-        background: linear-gradient(145deg, #091535 0%, #040B1E 50%, #02050E 100%);
+        background: transparent;
         overflow: hidden;
-      }
-
-      /* Cyber perspective neon grid background */
-      .scene-hook::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        opacity: 0.12;
-        background-image: 
-          linear-gradient(rgba(248, 152, 32, 0.15) 1.5px, transparent 1.5px),
-          linear-gradient(90deg, rgba(248, 152, 32, 0.15) 1.5px, transparent 1.5px);
-        background-size: 55px 55px;
-        transform: perspective(600px) rotateX(65deg) translateY(-25%) scale(1.4);
-        transform-origin: top center;
-        animation: gridMove 8s linear infinite;
-        animation-delay: calc(0s - var(--capture-time));
       }
 
       .hook-flash {
         position: absolute;
         inset: 0;
         z-index: 20;
-        background: radial-gradient(circle at center, rgba(248,152,32,0.85), rgba(255,255,255,0.6) 40%, transparent 70%);
+        background: radial-gradient(circle at center, rgba(248,152,32,0.6), rgba(255,255,255,0.4) 40%, transparent 70%);
         pointer-events: none;
         animation: hookFlash 0.5s ease-out both;
         animation-delay: calc(0s - var(--capture-time));
@@ -1509,7 +1492,7 @@ export function renderClipHtml(scene, config) {
       .hook-glow-orb-1 {
         top: 15%;
         left: 20%;
-        background: radial-gradient(circle, rgba(248,152,32,0.22), transparent 70%);
+        background: radial-gradient(circle, rgba(248,152,32,0.14), transparent 70%);
         animation: hookGlowOrb 3.6s ease-in-out infinite;
         animation-delay: calc(0.3s - var(--capture-time));
       }
@@ -1517,7 +1500,7 @@ export function renderClipHtml(scene, config) {
       .hook-glow-orb-2 {
         bottom: 10%;
         right: 10%;
-        background: radial-gradient(circle, rgba(83,130,161,0.18), transparent 70%);
+        background: radial-gradient(circle, rgba(83,130,161,0.12), transparent 70%);
         animation: hookGlowOrb 4.4s ease-in-out infinite;
         animation-delay: calc(1.2s - var(--capture-time));
       }
@@ -1539,14 +1522,14 @@ export function renderClipHtml(scene, config) {
         line-height: 1.15;
         font-weight: 1000;
         letter-spacing: -1.5px;
-        color: #FFFFFF;
+        color: var(--text);
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         gap: 16px 20px;
         max-width: 960px;
         width: 100%;
-        text-shadow: 0 4px 30px rgba(0,0,0,0.6);
+        text-shadow: none;
       }
 
       .hook-word {
@@ -1557,10 +1540,10 @@ export function renderClipHtml(scene, config) {
       }
 
       .hook-word-accent {
-        background: linear-gradient(135deg, #FFD39B 0%, #F89820 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, #D87D10 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 4px 24px rgba(248,152,32,0.35);
+        text-shadow: 0 4px 16px rgba(248,152,32,0.12);
         font-weight: 1000;
         transform: scale(1.03);
       }
@@ -1570,7 +1553,7 @@ export function renderClipHtml(scene, config) {
         height: 6px;
         border-radius: 999px;
         background: linear-gradient(90deg, var(--primary), #FFD39B, var(--primary));
-        box-shadow: 0 0 24px rgba(248,152,32,0.5);
+        box-shadow: 0 4px 12px rgba(248,152,32,0.25);
         animation: accentSweep 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         animation-delay: calc(var(--delay, 0.35s) - var(--capture-time));
         max-width: 460px;
@@ -1579,12 +1562,13 @@ export function renderClipHtml(scene, config) {
       .hook-brand {
         padding: 14px 28px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(248,152,32,0.25);
-        color: rgba(255,255,255,0.85);
+        background: rgba(255,255,255,0.85);
+        border: 2px solid var(--primary);
+        color: var(--text);
         font-size: 36px;
         font-weight: 900;
         letter-spacing: 1px;
+        box-shadow: 0 10px 25px rgba(248, 152, 32, 0.15);
         animation-name: fadeRise;
         animation-duration: 0.6s;
         animation-timing-function: var(--premium-ease);
