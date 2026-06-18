@@ -10,6 +10,7 @@
     "render:all": "node src/index.js render:all",
     "export:gifs": "node src/index.js export:gifs",
     "export:mp4": "node src/index.js export:mp4",
+    "export:carousel": "node src/index.js export:carousel",
     "analyze": "node src/index.js analyze",
     "preview": "node src/index.js preview",
     "debug": "node src/index.js debug",

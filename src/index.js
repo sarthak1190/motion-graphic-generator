@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { analyzeContentFile, debugContentFile, previewContentFile, renderContentFile } from "./renderer/renderPipeline.js";
+import { analyzeContentFile, debugContentFile, previewContentFile, renderContentFile, renderCarouselFile } from "./renderer/renderPipeline.js";
 import { listContentFiles, loadConfig } from "./utils/contentLoader.js";
 import { logger } from "./utils/logger.js";
 
@@ -26,6 +26,9 @@ async function main() {
       break;
     case "render:single":
       await renderSingle(config, "both");
+      break;
+    case "export:carousel":
+      await exportCarousel(config);
       break;
     case "export:gifs":
       if (contentArg) await renderSingle(config, "gif");
@@ -66,6 +69,11 @@ async function renderAll(config, mode) {
 async function renderSingle(config, mode) {
   if (!contentArg) throw new Error("Provide a content file path, for example: npm run render:single ./content/day-01.md");
   await renderContentFile(resolveInputPath(contentArg), config, mode);
+}
+
+async function exportCarousel(config) {
+  if (!contentArg) throw new Error("Provide a content file path, for example: npm run export:carousel ./content/day-16.md");
+  await renderCarouselFile(resolveInputPath(contentArg), config);
 }
 
 async function previewSingle(config) {

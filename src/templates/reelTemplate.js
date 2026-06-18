@@ -6,7 +6,7 @@ export function renderClipHtml(scene, config) {
   const { width, height, durationSeconds } = config.canvas;
   const sceneDuration = scene.duration ?? durationSeconds;
   const logicalWidth = 1080;
-  const logicalHeight = 1920;
+  const logicalHeight = height;
   const renderScale = width / logicalWidth;
 
   return `<!doctype html>
@@ -27,7 +27,7 @@ export function renderClipHtml(scene, config) {
         --capture-time: 0s;
         --safe-x: 60px;
         --content-max: 960px;
-        --content-bottom: 1650px;
+        --content-bottom: ${logicalHeight - 270}px;
         --premium-ease: cubic-bezier(0.22, 1, 0.36, 1);
       }
 
@@ -134,7 +134,7 @@ export function renderClipHtml(scene, config) {
       }
 
       .particle:nth-child(1) { left: 866px; top: 430px; }
-      .particle:nth-child(2) { left: 62px; top: 1370px; background: var(--secondary); }
+      .particle:nth-child(2) { left: 62px; top: calc(var(--stage-height) - 550px); background: var(--secondary); }
       .particle:nth-child(3) { right: 82px; bottom: 260px; }
 
       .thin-line {
@@ -147,7 +147,7 @@ export function renderClipHtml(scene, config) {
         animation-iteration-count: infinite;
       }
 
-      .thin-line:nth-child(4) { left: 90px; top: 1520px; }
+      .thin-line:nth-child(4) { left: 90px; top: calc(var(--stage-height) - 400px); }
       .thin-line:nth-child(5) { right: 126px; top: 330px; }
 
       .animated,
@@ -1832,5 +1832,97 @@ function renderBackgroundDecor() {
         <path d="M2 17h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </div>
+  `;
+}
+
+export function renderCarouselPdfHtml(scenes, config) {
+  // Generate a dummy clip HTML to extract the styles
+  const dummyHtml = renderClipHtml(scenes[0], config);
+  const styleStart = dummyHtml.indexOf("<style>");
+  const styleEnd = dummyHtml.indexOf("</style>") + 8;
+  let styleBlock = dummyHtml.substring(styleStart, styleEnd);
+  
+  // Replace #stage with .stage-slide so that the styles apply to each slide container
+  styleBlock = styleBlock.replace(/#stage/g, ".stage-slide");
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=${config.canvas.width}, initial-scale=1">
+    <title>Carousel PDF</title>
+    ${styleBlock}
+    <style>
+      /* Additional styles for PDF pagination and stacked layout */
+      .stage-slide {
+        position: relative;
+        width: var(--stage-width);
+        height: var(--stage-height);
+        overflow: hidden;
+        color: var(--text);
+        background: var(--background);
+        page-break-after: always;
+        break-after: page;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--background);
+      }
+    </style>
+  </head>
+  <body class="capture">
+    \${scenes.map((scene, idx) => {
+      const sceneDuration = scene.duration ?? config.canvas.durationSeconds;
+      return \`
+        <div class="stage-slide" style="--capture-time: \${sceneDuration}s; --duration: \${sceneDuration}s;">
+          \${renderBackgroundDecor()}
+          \${renderProgress({ ...scene, index: idx + 1, total: scenes.length })}
+          \${renderSceneBody(scene, config)}
+          \${renderBrandFooter(scene, config)}
+        </div>
+      \`;
+    }).join("")}
+    
+    <script>
+      const fitText = (selector, min, max) => {
+        for (const element of document.querySelectorAll(selector)) {
+          let elementMax = max;
+          const style = getComputedStyle(element);
+          const customMax = style.getPropertyValue("--code-font-size");
+          if (customMax && selector.includes(".code-pre")) {
+            elementMax = parseInt(customMax, 10) || max;
+          }
+          element.style.fontSize = elementMax + "px";
+          let size = elementMax;
+          while (size > min && (element.scrollHeight > element.clientHeight + 2 || element.scrollWidth > element.clientWidth + 2)) {
+            size -= 2;
+            element.style.fontSize = size + "px";
+          }
+        }
+      };
+
+      const fitScene = () => {
+        fitText(".fit-heading, .hook-text", 64, 110);
+        fitText(".fit-body, .paragraph-card p, .definition-card p, .timeline-card p, .recap-card p, .generic-card p, .problem-card p, .concept-card p, .example-card p, .syntax-card p, .list-card p, .list-item-card p, .numbered-card p, .takeaway-card p, .split-card p, .quote-card p, .flow-node strong, .comparison-row span", 26, 46);
+        fitText(".engage-text, .scene-subtitle, .cta-share-card, .cta-save, .cta-follow, .next-topic", 36, 68);
+        fitText(".check-item p", 36, 50);
+        fitText(".code-pre", 20, 44);
+        fitText(".output-only-card pre, .output-separate-card pre", 24, 36);
+        document.querySelectorAll(".visible-element").forEach((element) => {
+          element.style.visibility = "visible";
+        });
+      };
+
+      window.__carouselReady = async () => {
+        if (document.fonts?.ready) await document.fonts.ready;
+        fitScene();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        fitScene();
+      };
+    </script>
+  </body>
+</html>
   `;
 }

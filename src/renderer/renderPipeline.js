@@ -2,14 +2,15 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { analyzeContent } from "../utils/contentAnalyzer.js";
 import { loadContentFile } from "../utils/contentLoader.js";
-import { ensureDir, resetDir, writeJson } from "../utils/fileSystem.js";
+import { ensureDir, resetDir, writeJson, writeText } from "../utils/fileSystem.js";
 import { logger } from "../utils/logger.js";
 import { planScenes } from "../utils/scenePlanner.js";
 import { sceneDebugSummary, validateScenes } from "../utils/sceneValidator.js";
 import { writeClipHtml } from "./htmlRenderer.js";
-import { captureFrames, captureSceneScreenshots } from "./frameRenderer.js";
+import { captureFrames, captureSceneScreenshots, captureCarouselPdf } from "./frameRenderer.js";
 import { assertFfmpeg, combineMp4Clips, exportGif, exportGifFromVideo, exportMp4 } from "./videoExporter.js";
 import { downloadSnapSound, generateTTS, measureAudioDuration, mixSnapAndVoiceover, transcodeIntroVideo } from "../utils/audioProcessor.js";
+import { renderCarouselPdfHtml } from "../templates/reelTemplate.js";
 
 export async function renderContentFile(contentPath, config, mode = "both") {
   const content = await loadContentFile(contentPath);
@@ -233,4 +234,83 @@ function debugCaptureTimes(scene, config) {
 export async function analyzeContentFile(contentPath) {
   const content = await loadContentFile(contentPath);
   return analyzeContent(content.raw, content.path);
+}
+
+export async function renderCarouselFile(contentPath, config) {
+  const content = await loadContentFile(contentPath);
+  const analysis = analyzeContent(content.raw, content.path);
+  const plannedScenes = planScenes(analysis, config);
+  const { validScenes: scenes, errors, allScenes } = validateScenes(plannedScenes, config, logger);
+  
+  // Set dimensions for carousel
+  const width = config.carousel?.width ?? 1080;
+  const height = config.carousel?.height ?? 1350;
+  const format = config.carousel?.format ?? "4:5";
+  
+  const carouselConfig = {
+    ...config,
+    canvas: {
+      ...config.canvas,
+      width,
+      height,
+      format
+    }
+  };
+  
+  const outputDir = path.join(config.outputDir, content.name, "carousel");
+  await resetDir(outputDir);
+  
+  await writeJson(path.join(outputDir, "analysis.json"), analysis);
+  await writeJson(path.join(outputDir, "scenes.json"), scenes);
+  
+  logger.info(`Planned ${scenes.length} carousel slides (${width}x${height})`, { source: content.name });
+  
+  const slidePaths = [];
+  
+  // Create directories
+  await ensureDir(path.join(outputDir, "html"));
+  await ensureDir(path.join(outputDir, "slides"));
+  
+  // Capture each slide as a PNG
+  for (const scene of scenes) {
+    logger.info(`Rendering HTML for slide ${scene.index}: ${scene.title}`);
+    const htmlPath = await writeClipHtml(scene, carouselConfig, outputDir);
+    
+    // We capture at the end of the slide duration
+    const captureTime = Math.max(0, (scene.duration ?? carouselConfig.canvas.durationSeconds) - 0.05);
+    const slideFileName = `slide_${String(scene.index).padStart(2, "0")}.png`;
+    const outputPath = path.join(outputDir, "slides", slideFileName);
+    
+    logger.info(`Capturing static slide ${scene.index}: ${slideFileName}`);
+    await captureSceneScreenshots(htmlPath, [{ seconds: captureTime, outputPath }], carouselConfig);
+    slidePaths.push(outputPath);
+  }
+  
+  // Print combined PDF if enabled
+  let pdfPath = null;
+  if (config.carousel?.exportPdf !== false) {
+    pdfPath = path.join(outputDir, `${content.name}_carousel.pdf`);
+    logger.info(`Generating combined PDF carousel: ${path.basename(pdfPath)}`);
+    
+    const pdfHtml = renderCarouselPdfHtml(scenes, carouselConfig);
+    const pdfHtmlPath = path.join(outputDir, "html", "carousel_pdf.html");
+    await writeText(pdfHtmlPath, pdfHtml);
+    
+    await captureCarouselPdf(pdfHtmlPath, pdfPath, carouselConfig);
+    logger.success(`Combined PDF generated: ${pdfPath}`);
+  }
+  
+  if (!config.output.keepHtml) {
+    await fs.rm(path.join(outputDir, "html"), { recursive: true, force: true }).catch(() => {});
+  }
+  
+  logger.success(`Finished generating carousel for ${content.name}`);
+  
+  return {
+    source: content.path,
+    outputDir,
+    slidePaths,
+    pdfPath,
+    scenes
+  };
 }

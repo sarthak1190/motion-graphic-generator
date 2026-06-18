@@ -16,6 +16,12 @@
     "durationSeconds": 3,
     "format": "9:16"
   },
+  "carousel": {
+    "width": 1080,
+    "height": 1350,
+    "format": "4:5",
+    "exportPdf": true
+  },
   "output": {
     "dir": "output",
     "minClips": 1,
@@ -66,7 +72,7 @@
     },
     "introVideo": {
       "enabled": true,
-      "path": "video/Cat-Toss.mp4"
+      "path": "video/Stay-Dog.mp4"
     }
   }
 }

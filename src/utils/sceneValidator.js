@@ -1,5 +1,6 @@
 import { compactWhitespace } from "./text.js";
 import { hasVisibleContent } from "./scenePlanner.js";
+import { logger } from "./logger.js";
 
 const maxContentHeight = 1720;
 const forbiddenGeneratedText = [
@@ -137,13 +138,17 @@ export function validateScene(scene, config, context = {}) {
   if (scene.type !== "cta" && scene.type !== "hook" && scene.type !== "engage" && !sourceContains(scene, scene.title)) errors.push("scene title is not present in the markdown source");
   if (scene.type !== "cta" && scene.type !== "hook" && scene.type !== "engage" && hasNonSourceBodyText(scene)) errors.push("scene contains body text that is not present in the markdown source");
 
+  const maxContentHeight = config.canvas.height - 200;
   const estimatedHeight = estimateSceneHeight(scene);
   if (estimatedHeight > maxContentHeight) {
-    errors.push(`estimated content height ${estimatedHeight}px exceeds safe area ${maxContentHeight}px`);
+    logger?.warn(`Scene "${scene.title}" estimated content height ${estimatedHeight}px exceeds safe area ${maxContentHeight}px. Dynamic font resizing will be applied.`);
   }
 
-  if (config.canvas.width !== 1080 || config.canvas.height !== 1920) {
-    errors.push(`canvas must be 1080x1920, received ${config.canvas.width}x${config.canvas.height}`);
+  const isValidCanvas = (config.canvas.width === 1080 && config.canvas.height === 1920) ||
+                        (config.canvas.width === 1080 && config.canvas.height === 1350) ||
+                        (config.canvas.width === 1080 && config.canvas.height === 1080);
+  if (!isValidCanvas) {
+    errors.push(`canvas must be 1080x1920, 1080x1350, or 1080x1080, received ${config.canvas.width}x${config.canvas.height}`);
   }
 
   return errors;

@@ -284,6 +284,11 @@ export function parseMarkdownSlides(rawContent) {
           preamble = createSection(text, 1);
           preamble.slideNumber = 0;
           preamble.slideLabel = text;
+        } else if (current && !current.blocks.length && /^(?:Slide\s+\d+|Hook)$/i.test(current.title)) {
+          // The current slide is empty and is just a placeholder heading like "## Slide 1".
+          // Rename it to the actual title of the slide.
+          current.title = text;
+          current.slideLabel = text;
         } else {
           // Subsequent H1: treat as slide boundary (like H2)
           pushCurrent();

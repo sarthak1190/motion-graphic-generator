@@ -78,7 +78,7 @@ async function preparePage(page, htmlPath, config, readyAtSeconds = config.canva
   const readyTime = Math.max(readyAtSeconds, config.render.captureStartSeconds ?? 0.25);
   await page.setViewport({ width, height, deviceScaleFactor: 1 });
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "networkidle0" });
-  await page.waitForSelector("#stage");
+  await page.waitForSelector("#stage, .stage-slide");
   await page.evaluate(async (mountDelayMs, captureTime) => {
     document.body.classList.add("capture");
     document.documentElement.style.setProperty("--capture-time", `${captureTime}s`);
@@ -114,5 +114,42 @@ async function loadPuppeteer() {
     throw new Error(
       `Puppeteer is required for rendering. Run "npm install" first. Original error: ${error.message}`
     );
+  }
+}
+
+export async function captureCarouselPdf(htmlPath, outputPath, config) {
+  const puppeteer = await loadPuppeteer();
+  const { width, height } = config.canvas;
+
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: config.render.puppeteerLaunchArgs
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "networkidle0" });
+    await page.waitForSelector(".stage-slide");
+
+    await page.evaluate(async (mountDelayMs) => {
+      if (document.fonts?.ready) await document.fonts.ready;
+      if (typeof window.__carouselReady === "function") {
+        await window.__carouselReady();
+      }
+      await new Promise((resolve) => setTimeout(resolve, mountDelayMs));
+    }, config.render.mountDelayMs ?? 500);
+
+    await page.pdf({
+      path: outputPath,
+      width: `${width}px`,
+      height: `${height}px`,
+      printBackground: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 }
+    });
+
+    return outputPath;
+  } finally {
+    await browser.close();
   }
 }
