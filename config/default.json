@@ -19,7 +19,7 @@
   "output": {
     "dir": "output",
     "minClips": 1,
-    "maxClips": 60,
+    "maxClips": 20,
     "minTotalSeconds": 15,
     "preferredMinTotalSeconds": 45,
     "preferredMaxTotalSeconds": 75,
@@ -37,16 +37,16 @@
     "keepHtml": true
   },
   "theme": {
-    "background": "#FAFAFA",
+    "background": "#090D16",
     "primary": "#F89820",
-    "secondary": "#5382A1",
-    "card": "#FFFFFF",
-    "cardStrong": "#EFF6FF",
-    "text": "#111827",
-    "ink": "#111827",
-    "muted": "#4B5563",
-    "success": "#16A34A",
-    "danger": "#DC2626"
+    "secondary": "#38BDF8",
+    "card": "#131B2E",
+    "cardStrong": "#1E293B",
+    "text": "#F8FAFC",
+    "ink": "#F8FAFC",
+    "muted": "#94A3B8",
+    "success": "#34D399",
+    "danger": "#F87171"
   },
   "render": {
     "concurrency": 1,
@@ -66,7 +66,7 @@
     },
     "introVideo": {
       "enabled": true,
-      "path": "video/Scooter-Fall-on-Stairs.mp4"
+      "path": "video/Cat-Toss.mp4"
     }
   }
 }

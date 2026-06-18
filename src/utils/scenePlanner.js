@@ -36,6 +36,17 @@ const hookTemplates = [
   "This is why your **code breaks**..."
 ];
 
+function getRetentionPriority(scene) {
+  if (scene.type === "hook") return 100;
+  if (scene.type === "hero") return 90;
+  if (scene.type === "cta") return 80;
+  if (scene.type === "code") return 70;
+  if (scene.type === "comparison") return 65;
+  if (scene.type === "flow") return 50;
+  if (scene.title?.toLowerCase().includes("recap")) return 10;
+  return 30;
+}
+
 export function planScenes(analysis, config) {
   const slideSections = collectSlideSections(analysis);
   const scenes = slideSections.map((sectionItem, index) =>
@@ -55,6 +66,33 @@ export function planScenes(analysis, config) {
   const hasCta = scenes.some((s) => s.type === "cta");
   if (!hasCta) {
     scenes.push(buildSyntheticCtaScene(analysis, config));
+  }
+
+  // Apply high-retention clip trimming based on maxClips config (target short duration)
+  const maxClips = config.output?.maxClips ?? 8;
+  if (scenes.length > maxClips && scenes.length > 3) {
+    const hook = scenes[0];
+    const hero = scenes[1];
+    const cta = scenes[scenes.length - 1];
+    const middle = scenes.slice(2, scenes.length - 1);
+
+    // Map to retain original indices
+    const middleWithIndex = middle.map((sceneItem, idx) => ({ scene: sceneItem, idx }));
+
+    // Sort by retention priority descending
+    middleWithIndex.sort((a, b) => {
+      const pA = getRetentionPriority(a.scene);
+      const pB = getRetentionPriority(b.scene);
+      return pB - pA;
+    });
+
+    // Select top clips to fit maxClips budget
+    const selected = middleWithIndex.slice(0, maxClips - 3);
+
+    // Sort selected back to original narrative order
+    selected.sort((a, b) => a.idx - b.idx);
+
+    scenes.splice(0, scenes.length, hook, hero, ...selected.map(item => item.scene), cta);
   }
 
   // Inject engagement prompts (max 2 per reel)
@@ -227,9 +265,14 @@ function buildSyntheticCtaScene(analysis, config) {
         type: "bulletList",
         items: bullets,
         label: ""
+      },
+      {
+        type: "paragraph",
+        text: "So next time you code, make sure you...",
+        label: ""
       }
     ],
-    paragraphs: [],
+    paragraphs: ["So next time you code, make sure you..."],
     bullets: bullets,
     numbered: [],
     quotes: [],

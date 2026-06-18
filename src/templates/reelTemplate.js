@@ -58,7 +58,7 @@ export function renderClipHtml(scene, config) {
         transform-origin: top left;
         overflow: hidden;
         color: var(--text);
-        background: linear-gradient(180deg, #FAFAFA 0%, #F4F8FB 58%, #FAFAFA 100%);
+        background: var(--background);
       }
 
       #stage::before,
@@ -355,7 +355,8 @@ export function renderClipHtml(scene, config) {
       .brand-footer span {
         padding: 10px 16px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.72);
+        background: var(--card);
+        color: var(--ink);
         border: 1px solid rgba(83,130,161,0.18);
         box-shadow: 0 8px 22px rgba(11,31,77,0.06);
         white-space: nowrap;
@@ -364,7 +365,7 @@ export function renderClipHtml(scene, config) {
       .brand-footer strong {
         padding: 10px 16px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.92);
+        background: var(--card);
         border: 2px solid var(--primary);
         box-shadow: 0 10px 25px rgba(248, 152, 32, 0.15);
         white-space: nowrap;
@@ -537,9 +538,9 @@ export function renderClipHtml(scene, config) {
         padding: 14px 20px;
         border-radius: 999px;
         color: var(--ink);
-        background: rgba(255,255,255,0.92);
-        border: 1px solid rgba(83,130,161,0.18);
-        box-shadow: 0 14px 34px rgba(11,31,77,0.10);
+        background: var(--card);
+        border: 2px solid var(--primary);
+        box-shadow: 0 10px 25px rgba(248, 152, 32, 0.15);
         font-size: 38px;
         font-weight: 900;
       }
@@ -660,7 +661,7 @@ export function renderClipHtml(scene, config) {
         overflow: hidden;
         width: 100%;
         padding: 24px 26px;
-        background: #FFFFFF;
+        background: var(--card);
       }
 
       .recap-card,
@@ -734,8 +735,9 @@ export function renderClipHtml(scene, config) {
         margin-bottom: 14px;
         padding: 8px 14px;
         border-radius: 999px;
-        color: #07183D;
-        background: rgba(248,152,32,0.18);
+        color: var(--primary);
+        background: rgba(248, 152, 32, 0.12);
+        border: 1px solid rgba(248, 152, 32, 0.35);
         font-size: 32px;
         line-height: 1.1;
         font-weight: 1000;
@@ -754,6 +756,10 @@ export function renderClipHtml(scene, config) {
         border-radius: 22px;
         background: rgba(255,255,255,0.88);
         box-shadow: 0 16px 34px rgba(17,24,39,0.10);
+      }
+
+      .cta-list .list-item-card p {
+        color: #07183D;
       }
 
       .definition-card span,
@@ -810,7 +816,7 @@ export function renderClipHtml(scene, config) {
         width: 100%;
         max-width: var(--content-max);
         padding: 20px;
-        background: #FFFFFF;
+        background: var(--card);
       }
 
       .flow-row {
@@ -834,8 +840,9 @@ export function renderClipHtml(scene, config) {
         gap: 18px;
         padding: 12px 16px;
         border-radius: 22px;
-        background: linear-gradient(90deg, rgba(83,130,161,0.10), rgba(255,255,255,0.96));
+        background: linear-gradient(90deg, rgba(83,130,161,0.15), var(--card-strong));
         color: var(--ink);
+        border: 1px solid rgba(83, 130, 161, 0.18);
       }
 
       .flow-node span {
@@ -907,20 +914,23 @@ export function renderClipHtml(scene, config) {
         gap: 1px;
       }
 
-      .comparison-header strong,
+      .comparison-header strong {
+        padding: 18px;
+        font-size: 42px;
+        line-height: 1.28;
+        color: #07183D;
+        background: linear-gradient(90deg, rgba(248,152,32,0.96), rgba(255,211,155,0.96));
+        overflow-wrap: anywhere;
+      }
+
       .comparison-row span {
         padding: 18px;
         font-size: 40px;
         line-height: 1.28;
-        background: rgba(255,255,255,0.70);
+        background: var(--card);
         color: var(--ink);
+        border: 1px solid rgba(83, 130, 161, 0.18);
         overflow-wrap: anywhere;
-      }
-
-      .comparison-header strong {
-        color: #07183D;
-        background: linear-gradient(90deg, rgba(248,152,32,0.96), rgba(255,211,155,0.96));
-        font-size: 42px;
       }
 
       .split-comparison {
@@ -1562,7 +1572,7 @@ export function renderClipHtml(scene, config) {
       .hook-brand {
         padding: 14px 28px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.85);
+        background: var(--card);
         border: 2px solid var(--primary);
         color: var(--text);
         font-size: 36px;

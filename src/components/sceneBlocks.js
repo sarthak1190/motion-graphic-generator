@@ -57,6 +57,9 @@ function formatHookText(text) {
 
 function renderHook(scene, config) {
   const hookText = scene.content?.paragraphs?.[0] || scene.title || "Wait for it...";
+  const hasCode = scene.content?.code || scene.content?.codes?.length > 0;
+  const codeBlockHtml = hasCode ? renderCodeBlock(scene.content.code || scene.content.codes[0], scene.content.outputs || []) : "";
+
   return `
     <section class="scene scene-hook" data-scene-type="hook">
       <div class="hook-flash" aria-hidden="true"></div>
@@ -65,7 +68,8 @@ function renderHook(scene, config) {
       <div class="hook-content">
         <h1 class="hook-text animated visible-element" style="--delay: 0s" data-visible="title">${formatHookText(hookText)}</h1>
         <div class="hook-accent-line animated visible-element" style="--delay: 0.35s"></div>
-        <div class="hook-brand animated visible-element" style="--delay: 0.65s" data-visible="brand">${escapeHtml(config.brand?.handle || "@java_learning_hub_")}</div>
+        ${codeBlockHtml ? `<div class="hook-code-preview animated visible-element" style="--delay: 0.55s; width: 100%; transform: scale(0.88); transform-origin: top center; margin-top: -12px;">${codeBlockHtml}</div>` : ""}
+        <div class="hook-brand animated visible-element" style="--delay: ${codeBlockHtml ? "0.95s" : "0.65s"}" data-visible="brand">${escapeHtml(config.brand?.handle || "@java_learning_hub_")}</div>
       </div>
     </section>
   `;

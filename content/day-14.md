@@ -4,7 +4,14 @@
 
 Stop creating **10 different variables** for **10 related values...**
 
-VO: Stop creating ten different variables for ten related values. Let me show you why this is bad, and what you should be doing instead.
+```java
+// Noob Code
+int mark1 = 85;
+int mark2 = 90;
+int mark3 = 78;
+int mark4 = 88;
+int mark5 = 95;
+```
 
 ---
 
